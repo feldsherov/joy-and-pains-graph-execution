@@ -1,40 +1,276 @@
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-		<title>reveal.js</title>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-		<link rel="stylesheet" href="dist/reset.css">
-		<link rel="stylesheet" href="dist/reveal.css">
-		<link rel="stylesheet" href="dist/theme/black.css">
+  <title>Pain and joy of in-memory graph execution</title>
 
-		<!-- Theme used for syntax highlighted code -->
-		<link rel="stylesheet" href="plugin/highlight/monokai.css">
-	</head>
-	<body>
-		<div class="reveal">
-			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2</section>
-			</div>
-		</div>
+  <link rel="stylesheet" href="dist/reset.css">
+  <link rel="stylesheet" href="dist/reveal.css">
+  <link rel="stylesheet" href="dist/theme/simple.css">
+  <link rel="stylesheet" href="custom.css">
 
-		<script src="dist/reveal.js"></script>
-		<script src="plugin/notes/notes.js"></script>
-		<script src="plugin/markdown/markdown.js"></script>
-		<script src="plugin/highlight/highlight.js"></script>
-		<script>
-			// More info about initialization & config:
-			// - https://revealjs.com/initialization/
-			// - https://revealjs.com/config/
-			Reveal.initialize({
-				hash: true,
+  <!-- Theme used for syntax highlighted code -->
+  <link rel="stylesheet" href="plugin/highlight/monokai.css">
+  <script src="plugin/highlight/highlight.js"></script>
+</head>
 
-				// Learn about plugins: https://revealjs.com/plugins/
-				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
-			});
-		</script>
-	</body>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <section>
+        <section>
+          <h2 class="r-fit-text">Hi, I am Slava!</h2>
+
+          <aside class="notes">
+            - This is 30m talk, hope you've grab your espresso during the brake to keep up with speed :)
+            - As time is very limited let's jump directly to conspiracy theories.
+          </aside>
+        </section>
+
+        <section>
+          <h2>Graphs are everywhere!</h2>
+          <aside class="notes">
+            - Ok but what is the graph?
+          </aside>
+        </section>
+
+        <section>
+          # picture
+          <h2>Graph is dots connected by lines.</h2>
+          <aside class="notes">
+            - Too, chieldish right?
+          </aside>
+        </section>
+
+        <section>
+          # tex formula
+          <h2>Graph is two sets V and E \in V ^ 2.</h2>
+          <aside class="notes">
+            - Much better, right, but how is it realted to the conference?
+          </aside>
+        </section>
+
+        <section>
+          # systemctl list-dependencies local-fs.target
+          <h2>Graph is tasks and dependecies between them!</h2>
+        </section>
+
+
+        <section>
+          # picture included sets of: Graphs (everyhere) > C++ graph related tasks > C++ in memory graph
+          execution > this talk
+          <h2>The topic</h2>
+        </section>
+
+        <section>
+          <h2>Disclaimers!</h2>
+          <aside class="notes">
+            - This is my jorney, inheretly it can't have complemete coverage or beining a ground truth.
+            - But I will do my best to make rest of 25 minuts useful for you as C++ engineer :)
+            - Code quality dictated by slides size.
+            - All slides has Godbolt links.
+          </aside>
+        </section>
+
+      </section>
+
+      <section>
+        <section>
+          <h2>Why graphs?</h2>
+          <aside class="notes">
+            - Convenient abstruction, well researched, tons of ready-made algorithms.
+          </aside>
+        </section>
+
+        <section>
+          # series of pictures, how tasks became ready
+          # the last one picture of two independent tasks in graph
+          <h2>Parallelism!</h2>
+        </section>
+
+        <section>
+          # picture of in process vs distributed tasks execution
+          <h2>In process graph execution</h2>
+        </section>
+
+        <section>
+          <h2 class="r-fit-text">Portret of an client</h2>
+          <lo style="text-align: left">
+            <li>C++ binary or library</li>
+            <li>Which has tasks and dependecies between them inside</li>
+            <li>We need a readable code in it</li>
+            <li>And easily add tasks and dependecies</li>
+          </lo>
+        </section>
+
+        <section>
+          <h2 class="r-fit-text">Generic requirements</h2>
+          <lo style="text-align: left">
+            <li>Readable code</li>
+            <li>Easily to add tasks and edges</li>
+          </lo>
+        </section>
+
+
+        <section>
+          <h2 class="r-fit-text">Domain specific requirements</h2>
+          <lo style="text-align: left">
+            <li>Control over what executed and where</li>
+            <li>Conditions on edges</li>
+            <li>Async operations in task</li>
+            <li>Data transfer through edges</li>
+            <li>Cycles O_o</li>
+          </lo>
+        </section>
+
+        <section>
+          <h2 style="text-align: left">What options do we have?</h2>
+          <div class="footer">
+            * we are skipping trivial aproaches and jumping directly to juicy parts
+          </div>
+        </section>
+      </section>
+      <section>
+        <section>
+          <h2> Futures from C++ 11! </h2>
+        </section>
+
+        <section>
+          <h2>Futures recap [1] </h2>
+          <pre><code class="language-cpp" data-trim data-noescape data-line-numbers="|2|3|4|5-6|">
+              <script type="text/template">
+                int main() {
+                  std::promise<int> p;
+                  std::future<int> f = p.get_future();
+                  std::jthread t([&p](){ p.set_value(179); });
+                  f.wait();
+                  std::cout << f.get() << std::endl;
+                  return 0;
+                }
+              </script>
+            </code></pre>
+          <div class="footer">
+            <a href="https://godbolt.org/z/avYbq6acj" id="noteslink"> [1] Godbolt link </a>
+          </div>
+        </section>
+
+        <section>
+          <h2>Futures recap [2] </h2>
+          <pre><code class="language-cpp" data-trim data-noescape data-line-numbers="|2|3|4-12|13">
+              <script type="text/template">
+                int main() {
+                  std::promise<int> p;
+                  std::shared_future<int> f(p.get_future());
+
+                  std::jthread t_first([f](){
+                    f.wait();
+                    std::cout << "t_first: " << f.get() << std::endl;
+                  });
+                  std::jthread t_second([f](){
+                    f.wait();
+                    std::cout << "t_second: " << f.get() << std::endl;
+                  });
+                  p.set_value(179);
+                  return 0;
+                }
+              </script>
+            </code></pre>
+          <div class="footer">
+            <a href="https://godbolt.org/z/vWE31dcsa" id="noteslink"> [1] Godbolt link </a>
+          </div>
+        </section>
+
+        <section>
+          <pre><code class="language-text" data-trim data-noescape>
+            <script type="text/template">
+              t_second:t_first:  179179\n\n 
+            </script>
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Futures recap [2] the fix </h2>
+          <pre><code class="language-cpp" data-trim data-noescape data-line-numbers="|2|5|6|10|13|">
+              <script type="text/template">
+                std::promise<int> p;
+                std::promise<void> t1_promise;
+                std::shared_future<int> f(p.get_future());
+              
+                std::jthread t_second([f, f1 = t1_promise.get_future()](){
+                  f1.wait(); f.wait();
+                  std::cout << "t_second: " << f.get() << std::endl;
+                });
+                std::jthread t_first(
+                  [f, t1_p=std::move(t1_promise)]() mutable {
+                    f.wait();
+                    std::cout << "t_first: " << f.get() << std::endl;
+                    t1_p.set_value();
+                  });
+                p.set_value(179);
+              </script>
+            </code></pre>
+          <div class="footer">
+            <a href="https://godbolt.org/z/619decGbT" id="noteslink"> [1] Godbolt link </a>
+          </div>
+        </section>
+
+        <section>
+          #picture of dependencies between main thread, t1, t2.
+          <h2 class="r-fit-text"> Ooops, I did a graph! </h2>
+        </section>
+
+
+        <section>
+          <h2 class="r-fit-text"> Let's make the task more real! </h2>
+          # TODO code of a task implementation
+        </section>
+
+        <section>
+          <h2 class="r-fit-text"> Looks awesome! What is missing? </h2>
+          <lo style="text-align: left">
+            <li class="fragment"> 🟡 Readable code</li>
+            <li class="fragment"> 🟡 Easily to add tasks and edges</li>
+            <li class="fragment"> 🔴 Control over what executed and where</li>
+            <li class="fragment"> 🟡 Conditions on edges</li>
+            <li class="fragment"> 🟡 Async operations in task</li>
+            <li class="fragment"> 🟢 Data transfer through edges</li>
+            <li class="fragment"> 🔴 Cycles O_o</li>
+          </lo>
+        </section>
+
+
+      </section>
+
+      <section>
+        <section>
+          <h2>Graph execution engine an context</h2>
+        </section>
+
+      </section>
+
+
+    </div>
+  </div>
+
+
+  <script src="dist/reveal.js"></script>
+  <script src="plugin/notes/notes.js"></script>
+  <script src="plugin/markdown/markdown.js"></script>
+  <script src="plugin/highlight/highlight.js"></script>
+  <script>
+    // More info about initialization & config:
+    // - https://revealjs.com/initialization/
+    // - https://revealjs.com/config/
+    Reveal.initialize({
+      hash: true,
+
+      // Learn about plugins: https://revealjs.com/plugins/
+      plugins: [RevealMarkdown, RevealHighlight, RevealNotes]
+    });
+  </script>
+</body>
+
 </html>

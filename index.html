@@ -38,40 +38,39 @@
         </section>
 
         <section>
-          # picture
           <h2>Graph is dots connected by lines.</h2>
+          <img class="r-stretch" src="./images/graph.png" />
           <aside class="notes">
-            - Too, chieldish right?
+            - Too, childish right?
           </aside>
         </section>
 
         <section>
-          # tex formula
-          <h2>Graph is two sets V and E \in V ^ 2.</h2>
+          <h2>Graph is two sets...</h2>
+          <img class="r-stretch" src="./images/equation.svg" />
           <aside class="notes">
             - Much better, right, but how is it realted to the conference?
           </aside>
         </section>
 
         <section>
-          # systemctl list-dependencies local-fs.target
-          <h2>Graph is tasks and dependecies between them!</h2>
+          <h2 class="r-fit-text">Graph is tasks and dependecies between them!</h2>
+          <img class="r-stretch" src="./images/systemctl.png" />
         </section>
 
 
         <section>
-          # picture included sets of: Graphs (everyhere) > C++ graph related tasks > C++ in memory graph
-          execution > this talk
-          <h2>The topic</h2>
+          <h2>The talk</h2>
+          <img class="r-stretch" src="./images/topic.png" />
         </section>
 
         <section>
           <h2>Disclaimers!</h2>
           <aside class="notes">
-            - This is my jorney, inheretly it can't have complemete coverage or beining a ground truth.
+            - This is my jorney, inheretly it can't be complete in coverage or beining a ground truth.
             - But I will do my best to make rest of 25 minuts useful for you as C++ engineer :)
             - Code quality dictated by slides size.
-            - All slides has Godbolt links.
+            - All slides has Godbolt links with sometimes more verbose code.
           </aside>
         </section>
 
@@ -86,23 +85,20 @@
         </section>
 
         <section>
-          # series of pictures, how tasks became ready
-          # the last one picture of two independent tasks in graph
+          <h2>Nice abstruction to structure the code and .....</h2>
+        </section>
+
+
+        <section>
           <h2>Parallelism!</h2>
+          <img class="r-stretch" src="./images/parallelism.png" />
         </section>
 
         <section>
-          # picture of in process vs distributed tasks execution
-          <h2>In process graph execution</h2>
-        </section>
-
-        <section>
-          <h2 class="r-fit-text">Portret of an client</h2>
+          <h2 class="r-fit-text">Portret of our client</h2>
           <lo style="text-align: left">
             <li>C++ binary or library</li>
-            <li>Which has tasks and dependecies between them inside</li>
-            <li>We need a readable code in it</li>
-            <li>And easily add tasks and dependecies</li>
+            <li>With tasks and dependecies between them inside</li>
           </lo>
         </section>
 
@@ -135,7 +131,7 @@
       </section>
       <section>
         <section>
-          <h2> Futures from C++ 11! </h2>
+          <h2> Futures from C++ 11 </h2>
         </section>
 
         <section>
@@ -159,7 +155,7 @@
 
         <section>
           <h2>Futures recap [2] </h2>
-          <pre><code class="language-cpp" data-trim data-noescape data-line-numbers="|2|3|4-12|13">
+          <pre><code class="language-cpp" data-trim data-noescape data-line-numbers="|2|3|4-12|13|">
               <script type="text/template">
                 int main() {
                   std::promise<int> p;
@@ -218,29 +214,114 @@
         </section>
 
         <section>
-          #picture of dependencies between main thread, t1, t2.
           <h2 class="r-fit-text"> Ooops, I did a graph! </h2>
+          <img class="r-stretch" src="./images/futures_recap.png" />
         </section>
 
 
         <section>
-          <h2 class="r-fit-text"> Let's make the task more real! </h2>
-          # TODO code of a task implementation
+          <h2 class="r-fit-text"> Let's make the task more real! [1] </h2>
+          <pre><code class="language-cpp" data-trim data-noescape data-line-numbers>
+            <script type="text/template">
+              class MyAwesomeTaskInterface {
+                public:
+                  using FutureType = std::shared_future<MyAwesomeTaskResult>;
+                
+                  virtual FutureType GetFuture() = 0;
+                
+                protected:
+                  virtual void Run() = 0;
+                };
+            </script>
+          </code></pre>
+          <div class="footer">
+            <a href="https://godbolt.org/z/bnxrj58zn" id="noteslink"> [1] Godbolt link </a>
+          </div>
         </section>
 
         <section>
-          <h2 class="r-fit-text"> Looks awesome! What is missing? </h2>
+          <h2 class="r-fit-text"> Let's make the task more real! [2] </h2>
+          <pre><code class="language-cpp" data-trim data-noescape data-line-numbers>
+            <script type="text/template">
+              class MyAwesomeTask : MyAwesomeTaskInterface {
+                public:
+                    MyAwesomeTask(
+                        FirstDependencyInterface& first_dep,
+                        SecondDependencyInterface& second_dep 
+                    );
+                
+                    FutureType GetFuture() override {
+                        return future_;
+                    }
+                    ....
+              };
+            </script>
+          </code></pre>
+          <div class="footer">
+            <a href="https://godbolt.org/z/bnxrj58zn" id="noteslink"> [1] Godbolt link </a>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="r-fit-text"> Let's make the task more real! [2] </h2>
+          <pre><code class="language-cpp" data-trim data-noescape data-line-numbers>
+            <script type="text/template">
+              class MyAwesomeTask : MyAwesomeTaskInterface {
+                ...
+                protected:
+                    void Run() override {
+                        first_dep_.wait();
+                        second_dep_.wait();
+                        // Do something.
+                        promise_.set_value(MyAwesomeTaskResult());
+                    }
+                private:
+                    FirstDependencyInterface::FutureType first_dep_;
+                    SecondDependencyInterface::FutureType second_dep_; 
+                    std::promise<MyAwesomeTaskResult> promise_;
+                    FutureType future_;                
+                };
+            </script>
+          </code></pre>
+          <div class="footer">
+            <a href="https://godbolt.org/z/bnxrj58zn" id="noteslink"> [1] Godbolt link </a>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="r-fit-text"> Looks awesome! But who will exectute it? </h2>
+        </section>
+
+        <section>
+          <h2> Ugly fix... </h2>
+          <pre><code class="language-cpp" data-trim data-noescape data-line-numbers>
+            <script type="text/template">
+              class MyAwesomeTask : MyAwesomeTaskInterface {
+                    MyAwesomeTask(
+                        FirstDependencyInterface& first_dep,
+                        SecondDependencyInterface& second_dep 
+                    ) : ..., executor_([this](){Run()})
+                private:
+                    ...
+                    std::jthread executor_;                
+                };
+            </script>
+          </code></pre>
+          <div class="footer">
+            <a href="https://godbolt.org/z/bnxrj58zn" id="noteslink"> [1] Godbolt link </a>
+          </div>
+        </section>
+
+        <section>
+          <h2> Futures conclusions </h2>
           <lo style="text-align: left">
-            <li class="fragment"> 🟡 Readable code</li>
-            <li class="fragment"> 🟡 Easily to add tasks and edges</li>
-            <li class="fragment"> 🔴 Control over what executed and where</li>
-            <li class="fragment"> 🟡 Conditions on edges</li>
-            <li class="fragment"> 🟡 Async operations in task</li>
-            <li class="fragment"> 🟢 Data transfer through edges</li>
-            <li class="fragment"> 🔴 Cycles O_o</li>
+            <li class="fragment">What is about non-ugly fix?</li>
+            <li class="fragment">Hard to prevent futures spaghetti.</li>
+            <li class="fragment">Easy to create crazy controll flow.</li>
+            <li class="fragment">Hard to make library level generic.</li>
+            <li class="fragment">Not good enough for "one fits all" solution.</li>
           </lo>
-        </section>
-
+        </sections>
 
       </section>
 

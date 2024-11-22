@@ -79,9 +79,6 @@
       <section>
         <section>
           <h2>Why graphs?</h2>
-          <aside class="notes">
-            - Convenient abstruction, well researched, tons of ready-made algorithms.
-          </aside>
         </section>
 
         <section>
@@ -317,17 +314,22 @@
           <lo style="text-align: left">
             <li class="fragment">What is about non-ugly fix?</li>
             <li class="fragment">Hard to prevent futures spaghetti.</li>
-            <li class="fragment">Easy to create crazy controll flow.</li>
-            <li class="fragment">Hard to make library level generic.</li>
             <li class="fragment">Not good enough for "one fits all" solution.</li>
+            <li class="fragment"> <strong> Not easy to add a new tasks! </strong>  </li>
+            <li class="fragment">Quite flexible for small ad-hoc solutions.</li>
           </lo>
+
+          <aside class="notes">
+            - std::async not as popular and flexible as you may need
+            - std::futures are only about edges
+          </aside>
         </sections>
 
       </section>
 
       <section>
         <section>
-          <h2>Graph execution engine an context</h2>
+          <h2>Gaph execution engine an context</h2>
         </section>
 
       </section>
@@ -354,4 +356,4 @@
   </script>
 </body>
 
-</html>
+</html>r

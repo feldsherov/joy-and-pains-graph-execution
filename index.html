@@ -422,7 +422,104 @@
 
       </section>
 
+      <section>
+        <section>
+          <h2>Stuff I haven't seen in prod, but I would want to try! </h2>
+        </section>  
 
+        <section>
+          <h2> <a href="https://github.com/taskflow/taskflow"> Taskflow </a></h2>
+          <pre><code class="language-cpp" data-trim data-noescape data-line-numbers="|4-9|10-11|">
+            <script type="text/template">
+              tf::Executor executor;
+              tf::Taskflow taskflow;
+
+              auto [A, B, C, D] = taskflow.emplace(  // create four tasks
+                [] () { std::cout << "TaskA\n"; },
+                [] () { std::cout << "TaskB\n"; },
+                [] () { std::cout << "TaskC\n"; },
+                [] () { std::cout << "TaskD\n"; } 
+              );                                                                      
+              A.precede(B, C);  // A runs before B and C
+              D.succeed(B, C);  // D runs after  B and C
+                                                  
+              executor.run(taskflow).wait(); 
+            </script>
+          </code></pre>
+
+          <div class="footer">
+            <a href="https://www.youtube.com/watch?v=MX15huP5DsM&t=2462s" id="noteslink"> [1] CppCon 2020 talk about taskflow </a>
+          </div>
+        </section>
+
+        <section>
+          <h2> <a href="https://github.com/NVIDIA/stdexec/tree/main"> stdexec </a></h2>
+          <pre><code class="language-cpp" data-trim data-noescape data-line-numbers="|4-6|7-11|14|">
+            <script type="text/template">
+              exec::static_thread_pool pool(3);
+              auto sched = pool.get_scheduler();
+          
+              auto zero = stdexec::just(0) | stdexec::then(fun);
+              auto one = stdexec::just(1) | stdexec::then(fun);
+              auto two = stdexec::just(2) | stdexec::then(fun);
+              auto work = stdexec::when_all(
+                  stdexec::starts_on(sched, zero),
+                  stdexec::starts_on(sched, one),
+                  stdexec::starts_on(sched, two)
+              );
+          
+              // Launch the work and wait for the result
+              auto [i, j, k] = stdexec::sync_wait(std::move(work)).value();
+            </script>
+          </code></pre>
+
+          <div class="footer">
+            <a href="https://godbolt.org/z/d3nP31ozf" id="noteslink"> [1] Godbolt link </a>
+          </div>
+        </section>
+
+        <section>
+          <h2> <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html"> P2300 - std::execution </a></h2>
+        </section>
+      
+        <section>
+          <h2>Conclusions</h2>
+          <lo style="text-align: left">
+            <li class="fragment">There are much more async execution libraries.</li>
+            <li class="fragment">Huge graphs are not trivial to declare.</li>
+            <li class="fragment">P2300 should make decomposition of graphs easier.</li>
+          </lo>
+          <aside class="notes">
+            - Highlight again huge graphs this is one of huge pains in large teams.
+          </aside>
+        </section>
+      </section>
+
+      <section>
+        <section>
+          <h2>All talk in one slide</h2>
+          <lo style="text-align: left">
+            <li class="fragment">C++11 futures are good, but not enough.</li>
+            <li class="fragment">You can build a nice graph of tasks framework today.</li>
+            <li class="fragment">Link time registration of tasks is nice in huge teams.</li>
+            <li class="fragment">Get/Put is nice for type-safety vs. isolation.</li>
+            <li class="fragment">Corutines can bring async tasks to you graphs.</li>
+            <li class="fragment">P2300 have chanes to make everything composable.</li>
+          </lo>
+        </section>
+      
+        <section>
+          <h2 class="r-fit-text">QUESTIONS?</h2>
+					<div class="footer">
+						<lo>
+							<li><a href="https://t.me/feldsherov" id="noteslink"> [0] Tg: @feldsherov</a></li>
+							<li><a href="https://link.in/svyat" id="noteslink"> [1] Link: svyat</a></li>
+							<li><a href="mailto:svyat@feldsherov.name" id="noteslink"> [2] Mail: svyat@feldsherov.name</a></li>
+						</lo>
+					</div>
+				</section>
+        </section>
+      </section>
     </div>
   </div>
 
@@ -444,4 +541,4 @@
   </script>
 </body>
 
-</html>r
+</html>

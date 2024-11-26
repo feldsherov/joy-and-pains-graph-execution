@@ -244,13 +244,13 @@
           <pre><code class="language-cpp" data-trim data-noescape data-line-numbers="|3|5,8|">
             <script type="text/template">
               class MyAwesomeTaskInterface {
-                public:
-                  using FutureType = std::shared_future<MyAwesomeTaskResult>;
-                
-                  virtual FutureType GetFuture() = 0;
-                
-                protected:
-                  virtual void Run() = 0;
+              public:
+                using FutureType = std::shared_future<MyAwesomeTaskResult>;
+              
+                virtual FutureType GetFuture() = 0;
+              
+              protected:
+                virtual void Run() = 0;
               };
             </script>
           </code></pre>
@@ -360,15 +360,17 @@
 
         <section>
           <h2> Less ugly fix </h2>
-          <pre><code class="language-cpp" data-trim data-noescape data-line-numbers="|6-11">
+          <pre><code class="language-cpp" data-trim data-noescape data-line-numbers="|6-9|9-13">
             <script type="text/template">
               class MyAwesomeTask : public MyAwesomeTaskInterface {
                 MyAwesomeTask(
                   FirstDependencyInterface& first_dep,
                   SecondDependencyInterface& second_dep 
                 ) {
-                  std::experimental::when_all(first_dep_, second_dep_)
-                    .then(
+                  result_ = std::experimental::when_all(
+                        first_dep_, 
+                        second_dep_
+                    ).then(
                       [this](auto deps){
                         Run(std::move(deps));
                       }
@@ -659,7 +661,11 @@
         </section>
 
         <section>
-          <h2> <a href="https://github.com/NVIDIA/stdexec/tree/main"> stdexec </a></h2>
+          <h2> <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html"> P2300 - std::execution </a></h2>
+        </section>
+
+        <section>
+          <h2> <a href="https://github.com/NVIDIA/stdexec/tree/main"> stdexec  </a></h2>
           <pre><code class="language-cpp" data-trim data-noescape data-line-numbers="|4-6|7-11|14|">
             <script type="text/template">
               exec::static_thread_pool pool(3);
@@ -683,10 +689,6 @@
             <a href="https://godbolt.org/z/d3nP31ozf" id="noteslink"> [1] Godbolt link </a>
           </div>
         </section>
-
-        <section>
-          <h2> <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html"> P2300 - std::execution </a></h2>
-        </section>
       
         <section>
           <h2>Conclusions</h2>
@@ -708,7 +710,6 @@
             <li class="fragment">C++11 futures are not enough in large teams.</li>
             <li class="fragment">Recipe of a scalable task graph framework.</li>
             <li class="fragment">Link time registration is a nice tool for the above.</li>
-            <li class="fragment">Coroutines can bring async tasks to you graphs.</li>
             <li class="fragment">I hope P2300 will make everything composable.</li>
           </lo>
         </section>
